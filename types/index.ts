@@ -1,37 +1,19 @@
 // types/index.ts
 
-export interface Cliente {
-  id: string;
-  nome: string;
-  telefone: string;
-  endereco: string;
-  auth_user_id: string;
-  senha_alterada: boolean;
-}
+// ... (mantenha a interface Cliente e outras)
 
-export interface Relatorio {
+export interface Visit {
   id: string;
-  cliente_id: string;
-  data_visita: string;
+  client_id: string;
   ph: number;
-  cloro: number;
-  alcalinidade: number;
-  observacoes: string | null;
-  foto_url: string | null;
-  criado_em: string;
-}
-
-export interface ProdutoAplicado {
-  id: string;
-  relatorio_id: string;
-  nome_produto: string;
-  quantidade: string;
-}
-
-export interface SolicitacaoProduto {
-  id: string;
-  relatorio_id: string;
-  cliente_id: string;
-  status: 'pendente' | 'solicitado_piscineiro' | 'cliente_providencia';
-  criado_em: string;
+  chlorine: number;
+  alkalinity: number;
+  description: string | null;
+  photo_url: string | null;
+  water_condition: string;
+  // Assumindo que array no Supabase (text[]) ou JSONB. 
+  // Ajuste o tipo se for diferente no seu banco.
+  products_used: string[]; 
+  checklist: string[]; 
+  created_at: string; // Coluna padrão de data do Supabase
 }
