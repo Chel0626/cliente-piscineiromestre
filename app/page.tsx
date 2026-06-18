@@ -51,6 +51,20 @@ export default async function Dashboard() {
     );
   }
 
+  // --- FUNÇÃO TRADUTORA ---
+  // Transforma o texto do Supabase ('• Item 1 • Item 2') em uma lista real para o Next.js
+  const formatarLista = (texto: any) => {
+    if (!texto || typeof texto !== 'string') return [];
+    return texto
+      .split('•') // Corta a frase onde tiver a bolinha
+      .map(item => item.trim()) // Remove os espaços em branco das pontas
+      .filter(item => item.length > 0); // Joga fora os pedaços vazios gerados pelo split
+  };
+
+  const checklistTratado = formatarLista(visit.checklist);
+  const produtosTratados = formatarLista(visit.products_used);
+  // ------------------------
+
   // 7. Renderiza a tela normal com os dados reais
   return (
     <main className="min-h-screen bg-slate-50 pb-10">
@@ -83,13 +97,13 @@ export default async function Dashboard() {
           <WaterParamCard label="Alcalinidade" value={visit.alkalinity} unit="ppm" status="atencao" icon={<Gauge />} />
         </section>
 
-        {visit.checklist && visit.checklist.length > 0 && (
+        {checklistTratado.length > 0 && (
           <section className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
             <h3 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
               <CheckCircle2 className="text-emerald-500 w-5 h-5" /> Checklist Concluído
             </h3>
             <ul className="space-y-2">
-              {visit.checklist.map((item: string, index: number) => (
+              {checklistTratado.map((item: string, index: number) => (
                 <li key={index} className="text-sm text-slate-600 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" /> {item}
                 </li>
@@ -98,11 +112,11 @@ export default async function Dashboard() {
           </section>
         )}
 
-        {visit.products_used && visit.products_used.length > 0 && (
+        {produtosTratados.length > 0 && (
           <section className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
             <h3 className="font-bold text-slate-800 text-sm mb-3">Produtos Aplicados</h3>
             <div className="flex flex-wrap gap-2">
-              {visit.products_used.map((produto: string, index: number) => (
+              {produtosTratados.map((produto: string, index: number) => (
                 <span key={index} className="bg-cyan-50 text-cyan-700 px-3 py-1 rounded-lg text-xs font-medium border border-cyan-100">
                   {produto}
                 </span>
