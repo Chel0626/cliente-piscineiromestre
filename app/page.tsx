@@ -104,8 +104,9 @@ export default async function Dashboard() {
             </h3>
             <ul className="space-y-2">
               {checklistTratado.map((item: string, index: number) => (
-                <li key={index} className="text-sm text-slate-600 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" /> {item}
+                <li key={index} className="text-sm text-slate-600 flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1.5 shrink-0" />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
@@ -115,13 +116,14 @@ export default async function Dashboard() {
         {produtosTratados.length > 0 && (
           <section className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
             <h3 className="font-bold text-slate-800 text-sm mb-3">Produtos Aplicados</h3>
-            <div className="flex flex-wrap gap-2">
+            <ul className="space-y-2">
               {produtosTratados.map((produto: string, index: number) => (
-                <span key={index} className="bg-cyan-50 text-cyan-700 px-3 py-1 rounded-lg text-xs font-medium border border-cyan-100">
-                  {produto}
-                </span>
+                <li key={index} className="text-sm text-slate-600 flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1.5 shrink-0" />
+                  <span>{produto}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         )}
 
