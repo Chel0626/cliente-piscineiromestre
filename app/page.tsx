@@ -20,8 +20,8 @@ export default async function Dashboard() {
 
   // 4. Descobre quem é o cliente usando o ID do usuário logado
   const { data: cliente } = await supabase
-    .from('clientes')
-    .select('id, nome')
+    .from('clients')
+    .select('id, name')
     .eq('auth_user_id', user.id)
     .single();
 
@@ -44,7 +44,7 @@ export default async function Dashboard() {
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="text-center">
           <Waves className="w-16 h-16 text-cyan-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-slate-700">Bem-vindo, {cliente.nome}!</h2>
+          <h2 className="text-xl font-bold text-slate-700">Bem-vindo, {cliente.name}!</h2>
           <p className="text-slate-500 mt-2">Sua piscina ainda não recebeu a primeira visita registrada.</p>
         </div>
       </main>
