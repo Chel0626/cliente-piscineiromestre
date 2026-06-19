@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabaseServer';
 import WaterParamCard from '@/components/WaterParamCard';
 import ProductRequestActions from '@/components/ProductRequestActions';
 import InstallPrompt from '@/components/InstallPrompt';
+import NotificationPrompt from '@/components/NotificationPrompt';
 import { Droplet, FlaskConical, Gauge, StickyNote, CheckCircle2, Waves } from 'lucide-react';
 import { revalidatePath } from 'next/cache'; // <--- NOVO IMPORT AQUI
 
@@ -51,6 +52,23 @@ export default async function Dashboard() {
     
     // Limpa o cache da página para garantir que o F5 não traga o pedido antigo de volta
     revalidatePath('/'); 
+  }
+
+  // Server Action para guardar o token de notificação push
+  async function registarPushNoServidor(subscription: any) {
+    'use server';
+    const supabaseServer = await createClient();
+
+    // Descobre o ID do cliente novamente de forma segura
+    const { data: { user } } = await supabaseServer.auth.getUser();
+    const { data: cli } = await supabaseServer.from('clients').select('id').eq('auth_user_id', user?.id).single();
+
+    if (cli) {
+      await supabaseServer.from('client_push_subscriptions').insert({
+        client_id: cli.id,
+        subscription: subscription
+      });
+    }
   }
   // ------------------------------------------------------------
 
@@ -198,6 +216,13 @@ export default async function Dashboard() {
             />
           </section>
         )}
+        {/* COMPONENTE DE SOLICITAÇÃO DE NOTIFICAÇÃO PUSH */}
+        <NotificationPrompt 
+          clientId={cliente.id} 
+          onSaveSubscription={registarPushNoServidor} 
+        />
+
+        {/* POPUP DE INSTALAÇÃO */}
         <InstallPrompt />
       </div>
     </main>
