@@ -16,6 +16,13 @@ export default function NotificationPrompt({ clientId, onSaveSubscription }: Pro
     if ('Notification' in window) {
       setPermission(Notification.permission);
     }
+    
+    // 🔗 O LINK QUE FALTAVA: Ativar o Service Worker no navegador do cliente!
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Service Worker do Piscineiro Mestre ativo!'))
+        .catch(err => console.error('Erro ao registrar Service Worker:', err));
+    }
   }, []);
 
   function urlBase64ToUint8Array(base64String: string) {
@@ -31,7 +38,7 @@ export default function NotificationPrompt({ clientId, onSaveSubscription }: Pro
 
   const subscribeToPush = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      alert('As notificações não são suportadas neste dispositivo/navegador.');
+      alert('As notificações não são suportadas neste dispositivo.');
       return;
     }
 
@@ -41,23 +48,23 @@ export default function NotificationPrompt({ clientId, onSaveSubscription }: Pro
       setPermission(res);
 
       if (res === 'granted') {
+        // Agora que o SW está registrado acima, esta linha vai responder instantaneamente!
         const registration = await navigator.serviceWorker.ready;
+        
         const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-        if (!publicKey) throw new Error('Chave pública VAPID não configurada no .env');
+        if (!publicKey) throw new Error('Chave pública VAPID não encontrada no .env');
 
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(publicKey),
         });
 
-        // Dispara a Server Action e espera o retorno real do banco
         await onSaveSubscription(JSON.parse(JSON.stringify(subscription)));
         alert('Notificações ativadas com sucesso! 🎉');
       }
     } catch (error: any) {
-      console.error('Erro ao ativar push no componente:', error);
-      alert('Não foi possível salvar a ativação no banco de dados. Verifique o terminal.');
-      // Reseta a permissão localmente para o cliente poder tentar de novo se falhou no banco
+      console.error('Erro ao ativar push:', error);
+      alert('Erro ao salvar no banco. Abra o console do navegador (F12) para ver os detalhes.');
       setPermission('default');
     } finally {
       setLoading(false);
@@ -73,7 +80,7 @@ export default function NotificationPrompt({ clientId, onSaveSubscription }: Pro
       </div>
       <h4 className="font-bold text-white text-base">Deseja receber avisos da piscina?</h4>
       <p className="text-xs text-slate-300 mt-1 max-w-xs leading-relaxed">
-        Ative para o seu celular apitar e avisar sempre que o piscineiro finalizar uma manutenção!
+        Ative para o seu celular avisar sempre que o piscineiro finalizar uma manutenção!
       </p>
       
       <button

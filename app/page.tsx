@@ -130,7 +130,7 @@ export default async function Dashboard() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent z-10" />
         
         {visit.photo_url ? (
-          <Image src={visit.photo_url} alt="Piscina" fill className="object-cover" unoptimized />
+          <Image src={visit.photo_url} alt="Piscina" fill className="object-cover" unoptimized priority />
         ) : (
           <div className="w-full h-full bg-cyan-800 flex items-center justify-center">
             <Waves className="text-white w-16 h-16 opacity-50" />
