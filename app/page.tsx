@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabaseServer';
 import WaterParamCard from '@/components/WaterParamCard';
 import ProductRequestActions from '@/components/ProductRequestActions';
+import InstallPrompt from '@/components/InstallPrompt';
 import { Droplet, FlaskConical, Gauge, StickyNote, CheckCircle2, Waves } from 'lucide-react';
 import { revalidatePath } from 'next/cache'; // <--- NOVO IMPORT AQUI
 
@@ -197,7 +198,7 @@ export default async function Dashboard() {
             />
           </section>
         )}
-
+        <InstallPrompt />
       </div>
     </main>
   );
