@@ -7,18 +7,14 @@ import ProductRequestActions from '@/components/ProductRequestActions';
 import { Droplet, FlaskConical, Gauge, StickyNote, CheckCircle2, Waves } from 'lucide-react';
 
 export default async function Dashboard() {
-  // 1. Chama o nosso porteiro (Supabase configurado para o servidor)
   const supabase = await createClient();
 
-  // 2. Pergunta ao Supabase: "Tem alguém logado aí?"
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  // 3. Se não tiver ninguém (ou der erro), expulsa para a tela de login
   if (authError || !user) {
     redirect('/login');
   }
 
-  // 4. Descobre quem é o cliente usando o ID do usuário logado
   const { data: cliente } = await supabase
     .from('clients')
     .select('id, name')
@@ -29,16 +25,15 @@ export default async function Dashboard() {
     return <div className="p-10 text-center">Erro: Seu cadastro de cliente não foi encontrado.</div>;
   }
 
-  // 5. Busca a última visita APENAS desse cliente
+  // 1. Busca a última visita
   const { data: visit } = await supabase
     .from('visits')
     .select('*')
     .eq('client_id', cliente.id)
-    .order('created_at', { ascending: false }) // Pega a mais recente
+    .order('created_at', { ascending: false })
     .limit(1)
-    .single(); // Garante que retorne só 1 objeto, não uma lista
+    .single();
 
-  // 6. Se não tiver visita nenhuma ainda, mostra uma tela amigável
   if (!visit) {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
@@ -51,56 +46,54 @@ export default async function Dashboard() {
     );
   }
 
-  // --- FUNÇÃO TRADUTORA À PROVA DE BALAS ---
+  // 2. O PULO DO GATO: Busca se tem um pedido ESTRUTURADO pendente vinculado a esta visita!
+  const { data: pendingRequest } = await supabase
+    .from('product_requests')
+    .select('id, products')
+    .eq('visit_id', visit.id) // Usando a coluna que vimos na sua imagem
+    .eq('status', 'pending')
+    .maybeSingle();
+
+  // 3. Lê o seu JSONB e transforma em texto ("Cloro Multiação (1), Clarificante (1)")
+  let nomesProdutosPendentes = '';
+  if (pendingRequest && Array.isArray(pendingRequest.products)) {
+    nomesProdutosPendentes = pendingRequest.products
+      .map((p: any) => `${p.name} (${p.quantity || 1})`)
+      .join(' • ');
+  }
+
   const formatarLista = (texto: any) => {
     if (!texto) return [];
-    
-    // Se o Supabase já mandar como lista, retorna direto
     if (Array.isArray(texto)) return texto;
-
     if (typeof texto === 'string') {
-      // Caso 1: Formato do PostgreSQL '{"Item 1","Item 2"}'
       if (texto.startsWith('{') && texto.endsWith('}')) {
         return texto
-          .slice(1, -1) // Remove as chaves { }
-          .split(',') // Fátia nas vírgulas
-          .map(item => item.replace(/^"|"$/g, '').trim()) // Remove as aspas que o Postgres coloca
+          .slice(1, -1)
+          .split(',')
+          .map(item => item.replace(/^"|"$/g, '').trim())
           .filter(item => item.length > 0);
       }
-      
-      // Caso 2: Formato do seu App da Empresa '• Item 1 • Item 2'
       if (texto.includes('•')) {
         return texto
           .split('•')
           .map(item => item.trim())
           .filter(item => item.length > 0);
       }
-
-      // Caso o texto não tenha bolinhas nem chaves, devolve como um item único
       return [texto.trim()];
     }
-    
     return [];
   };
 
   const checklistTratado = formatarLista(visit.checklist);
   const produtosTratados = formatarLista(visit.products_used);
-  // ----------------------------------------
 
-  // 7. Renderiza a tela normal com os dados reais
   return (
     <main className="min-h-screen bg-slate-50 pb-10">
       <div className="relative w-full h-64 rounded-b-3xl overflow-hidden shadow-md">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent z-10" />
         
         {visit.photo_url ? (
-          <Image 
-            src={visit.photo_url} 
-            alt="Piscina" 
-            fill 
-            className="object-cover" 
-            unoptimized // Adicionado para permitir fotos externas temporárias de teste
-          />
+          <Image src={visit.photo_url} alt="Piscina" fill className="object-cover" unoptimized />
         ) : (
           <div className="w-full h-full bg-cyan-800 flex items-center justify-center">
             <Waves className="text-white w-16 h-16 opacity-50" />
@@ -152,6 +145,16 @@ export default async function Dashboard() {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {/* COMPONENTE DE APROVAÇÃO: Agora ele lê o Request estruturado e passa o ID correto */}
+        {pendingRequest && (
+          <section className="mt-2">
+            <ProductRequestActions 
+              produtoNome={nomesProdutosPendentes} 
+              solicitacaoId={pendingRequest.id} 
+            />
           </section>
         )}
 
