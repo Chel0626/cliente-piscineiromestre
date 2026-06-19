@@ -7,7 +7,7 @@ import ProductRequestActions from '@/components/ProductRequestActions';
 import InstallPrompt from '@/components/InstallPrompt';
 import NotificationPrompt from '@/components/NotificationPrompt';
 import { Droplet, FlaskConical, Gauge, StickyNote, CheckCircle2, Waves } from 'lucide-react';
-import { revalidatePath } from 'next/cache'; // <--- NOVO IMPORT AQUI
+import { revalidatePath } from 'next/cache';
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -28,49 +28,42 @@ export default async function Dashboard() {
     return <div className="p-10 text-center">Erro: Seu cadastro de cliente não foi encontrado.</div>;
   }
 
-  // --- NOVA FUNÇÃO (SERVER ACTION) QUE RESOLVE O PROBLEMA ---
   async function aprovarPedidoNoServidor(solicitacaoId: string, status: string, providedBy: string) {
-    'use server'; // Diz ao Next.js para rodar isso obrigatoriamente no backend
-    
-    const supabaseServer = await createClient(); // Cria um cliente Supabase com os Cookies de login perfeitos!
-    
-    const payload: any = {
-      status: status,
-      approval_date: new Date().toISOString()
-    };
+    'use server';
+    const supabaseServer = await createClient();
+    const payload: any = { status: status, approval_date: new Date().toISOString() };
     if (providedBy) payload.provided_by = providedBy;
 
-    const { error } = await supabaseServer
-      .from('product_requests')
-      .update(payload)
-      .eq('id', solicitacaoId);
-
-    if (error) {
-      console.error("Erro no update:", error);
-      throw new Error('Falha ao atualizar o banco');
-    }
-    
-    // Limpa o cache da página para garantir que o F5 não traga o pedido antigo de volta
+    const { error } = await supabaseServer.from('product_requests').update(payload).eq('id', solicitacaoId);
+    if (error) throw new Error('Falha ao atualizar o banco');
     revalidatePath('/'); 
   }
 
-  // Server Action para guardar o token de notificação push
+  // --- SERVER ACTION BLINDADA CONTRA ERROS SILENCIOSOS ---
   async function registarPushNoServidor(subscription: any) {
     'use server';
     const supabaseServer = await createClient();
 
-    // Descobre o ID do cliente novamente de forma segura
     const { data: { user } } = await supabaseServer.auth.getUser();
     const { data: cli } = await supabaseServer.from('clients').select('id').eq('auth_user_id', user?.id).single();
 
-    if (cli) {
-      await supabaseServer.from('client_push_subscriptions').insert({
+    if (!cli) {
+      throw new Error('Cliente não identificado no servidor.');
+    }
+
+    // Executa a inserção checando o objeto de erro explicitamente
+    const { error: insertError } = await supabaseServer
+      .from('client_push_subscriptions')
+      .insert({
         client_id: cli.id,
         subscription: subscription
       });
+
+    if (insertError) {
+      console.error('ERRO REAL DO SUPABASE NO PUSH:', insertError.message);
+      throw new Error(insertError.message); // Garante que o componente pegue o erro no catch
     }
   }
-  // ------------------------------------------------------------
 
   // 1. Busca a última visita
   const { data: visit } = await supabase
@@ -112,22 +105,17 @@ export default async function Dashboard() {
 
   const formatarLista = (texto: any) => {
     if (!texto) return [];
-    if (Array.isArray(texto)) return texto;
-    if (typeof texto === 'string') {
-      if (texto.startsWith('{') && texto.endsWith('}')) {
-        return texto
-          .slice(1, -1)
-          .split(',')
-          .map(item => item.replace(/^"|"$/g, '').trim())
-          .filter(item => item.length > 0);
+    let textoReal = Array.isArray(texto) && texto.length === 1 && typeof texto[0] === 'string' ? texto[0] : texto;
+    if (Array.isArray(textoReal)) return textoReal;
+    if (typeof textoReal === 'string') {
+      let limpo = textoReal.trim();
+      if (limpo.startsWith('{') && limpo.endsWith('}')) {
+        return limpo.slice(1, -1).split('","').map(item => item.replace(/^"|"$/g, '').trim()).filter(item => item.length > 0);
       }
-      if (texto.includes('•')) {
-        return texto
-          .split('•')
-          .map(item => item.trim())
-          .filter(item => item.length > 0);
+      if (limpo.includes('•')) {
+        return limpo.split('•').map(item => item.trim()).filter(item => item.length > 0);
       }
-      return [texto.trim()];
+      return [limpo];
     }
     return [];
   };
@@ -137,6 +125,7 @@ export default async function Dashboard() {
 
   return (
     <main className="min-h-screen bg-slate-50 pb-10">
+      {/* CARD DA FOTO: Agora ele é o container pai do prompt de notificação */}
       <div className="relative w-full h-64 rounded-b-3xl overflow-hidden shadow-md">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent z-10" />
         
@@ -157,6 +146,12 @@ export default async function Dashboard() {
             {visit.water_condition || 'Não informada'}
           </div>
         </div>
+
+        {/* POPUP DE NOTIFICAÇÃO ADICIONADO AQUI DENTRO (VAI FAZER O OVERLAY DA FOTO) */}
+        <NotificationPrompt 
+          clientId={cliente.id} 
+          onSaveSubscription={registarPushNoServidor} 
+        />
       </div>
 
       <div className="px-4 mt-6 space-y-6 max-w-lg mx-auto">
@@ -206,23 +201,16 @@ export default async function Dashboard() {
           </section>
         )}
 
-        {/* COMPONENTE RECEBE A FUNÇÃO PODEROSA DO SERVIDOR */}
         {pendingRequest && (
           <section className="pt-2">
             <ProductRequestActions 
               produtoNome={nomesProdutosPendentes} 
               solicitacaoId={pendingRequest.id} 
-              onAction={aprovarPedidoNoServidor} // <--- Passando a função aqui!
+              onAction={aprovarPedidoNoServidor}
             />
           </section>
         )}
-        {/* COMPONENTE DE SOLICITAÇÃO DE NOTIFICAÇÃO PUSH */}
-        <NotificationPrompt 
-          clientId={cliente.id} 
-          onSaveSubscription={registarPushNoServidor} 
-        />
 
-        {/* POPUP DE INSTALAÇÃO */}
         <InstallPrompt />
       </div>
     </main>

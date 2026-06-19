@@ -1,7 +1,7 @@
 // components/NotificationPrompt.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { Bell, BellOff } from 'lucide-react';
+import { Bell } from 'lucide-react';
 
 interface Props {
   clientId: string;
@@ -18,7 +18,6 @@ export default function NotificationPrompt({ clientId, onSaveSubscription }: Pro
     }
   }, []);
 
-  // Função necessária para converter a chave pública VAPID para o formato do navegador
   function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -32,61 +31,57 @@ export default function NotificationPrompt({ clientId, onSaveSubscription }: Pro
 
   const subscribeToPush = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      alert('As notificações não são suportadas neste navegador.');
+      alert('As notificações não são suportadas neste dispositivo/navegador.');
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Pede permissão nativa ao sistema operacional
       const res = await Notification.requestPermission();
       setPermission(res);
 
       if (res === 'granted') {
-        // 2. Aguarda o Service Worker estar pronto
         const registration = await navigator.serviceWorker.ready;
-
-        // 3. Subscreve o telemóvel no servidor de Push do Google/Apple
         const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-        if (!publicKey) throw new Error('Chave pública VAPID em falta');
+        if (!publicKey) throw new Error('Chave pública VAPID não configurada no .env');
 
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(publicKey),
         });
 
-        // 4. Envia o token gerado para guardar no Supabase
+        // Dispara a Server Action e espera o retorno real do banco
         await onSaveSubscription(JSON.parse(JSON.stringify(subscription)));
         alert('Notificações ativadas com sucesso! 🎉');
       }
-    } catch (error) {
-      console.error('Erro ao ativar push:', error);
-      alert('Não foi possível ativar as notificações.');
+    } catch (error: any) {
+      console.error('Erro ao ativar push no componente:', error);
+      alert('Não foi possível salvar a ativação no banco de dados. Verifique o terminal.');
+      // Reseta a permissão localmente para o cliente poder tentar de novo se falhou no banco
+      setPermission('default');
     } finally {
       setLoading(false);
     }
   };
 
-  // Se já estiver aceite ou bloqueado, não exibe o banner de ativação
   if (permission !== 'default') return null;
 
   return (
-    <div className="bg-cyan-50 border border-cyan-200 rounded-2xl p-4 flex items-center justify-between gap-4 mt-4">
-      <div className="flex gap-3 items-center">
-        <div className="bg-cyan-500 text-white p-2 rounded-xl">
-          <Bell className="w-5 h-5 animate-bounce" />
-        </div>
-        <div>
-          <h4 className="font-bold text-slate-800 text-sm">Deseja receber avisos?</h4>
-          <p className="text-xs text-slate-500 mt-0.5">Ative para saber quando o piscineiro fizer uma visita.</p>
-        </div>
+    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-30 flex flex-col justify-center items-center p-6 text-center animate-in fade-in duration-300">
+      <div className="bg-cyan-500 text-white p-3 rounded-2xl mb-3 shadow-lg shadow-cyan-500/30">
+        <Bell className="w-6 h-6 animate-bounce" />
       </div>
+      <h4 className="font-bold text-white text-base">Deseja receber avisos da piscina?</h4>
+      <p className="text-xs text-slate-300 mt-1 max-w-xs leading-relaxed">
+        Ative para o seu celular apitar e avisar sempre que o piscineiro finalizar uma manutenção!
+      </p>
+      
       <button
         onClick={subscribeToPush}
         disabled={loading}
-        className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition-colors shrink-0 disabled:opacity-50"
+        className="mt-5 w-full max-w-[220px] bg-[#39FF14] text-slate-900 font-black text-xs py-3.5 px-6 rounded-xl shadow-[0_0_15px_rgba(57,255,20,0.4)] transition-all active:scale-95 disabled:opacity-50 tracking-wider"
       >
-        {loading ? 'A ativar...' : 'Ativar'}
+        {loading ? 'CONECTANDO...' : 'ATIVAR NOTIFICAÇÕES'}
       </button>
     </div>
   );
