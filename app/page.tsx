@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabaseServer';
 import WaterParamCard from '@/components/WaterParamCard';
 import ProductRequestActions from '@/components/ProductRequestActions';
 import { Droplet, FlaskConical, Gauge, StickyNote, CheckCircle2, Waves } from 'lucide-react';
+import { revalidatePath } from 'next/cache'; // <--- NOVO IMPORT AQUI
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -24,6 +25,33 @@ export default async function Dashboard() {
   if (!cliente) {
     return <div className="p-10 text-center">Erro: Seu cadastro de cliente não foi encontrado.</div>;
   }
+
+  // --- NOVA FUNÇÃO (SERVER ACTION) QUE RESOLVE O PROBLEMA ---
+  async function aprovarPedidoNoServidor(solicitacaoId: string, status: string, providedBy: string) {
+    'use server'; // Diz ao Next.js para rodar isso obrigatoriamente no backend
+    
+    const supabaseServer = await createClient(); // Cria um cliente Supabase com os Cookies de login perfeitos!
+    
+    const payload: any = {
+      status: status,
+      approval_date: new Date().toISOString()
+    };
+    if (providedBy) payload.provided_by = providedBy;
+
+    const { error } = await supabaseServer
+      .from('product_requests')
+      .update(payload)
+      .eq('id', solicitacaoId);
+
+    if (error) {
+      console.error("Erro no update:", error);
+      throw new Error('Falha ao atualizar o banco');
+    }
+    
+    // Limpa o cache da página para garantir que o F5 não traga o pedido antigo de volta
+    revalidatePath('/'); 
+  }
+  // ------------------------------------------------------------
 
   // 1. Busca a última visita
   const { data: visit } = await supabase
@@ -46,15 +74,16 @@ export default async function Dashboard() {
     );
   }
 
-  // 2. O PULO DO GATO: Busca se tem um pedido ESTRUTURADO pendente vinculado a esta visita!
+  // 2. Busca o pedido estruturado pendente
   const { data: pendingRequest } = await supabase
     .from('product_requests')
     .select('id, products')
-    .eq('visit_id', visit.id) // Usando a coluna que vimos na sua imagem
+    .eq('client_id', cliente.id) 
     .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  // 3. Lê o seu JSONB e transforma em texto ("Cloro Multiação (1), Clarificante (1)")
   let nomesProdutosPendentes = '';
   if (pendingRequest && Array.isArray(pendingRequest.products)) {
     nomesProdutosPendentes = pendingRequest.products
@@ -148,16 +177,6 @@ export default async function Dashboard() {
           </section>
         )}
 
-        {/* COMPONENTE DE APROVAÇÃO: Agora ele lê o Request estruturado e passa o ID correto */}
-        {pendingRequest && (
-          <section className="mt-2">
-            <ProductRequestActions 
-              produtoNome={nomesProdutosPendentes} 
-              solicitacaoId={pendingRequest.id} 
-            />
-          </section>
-        )}
-
         {visit.description && (
           <section className="bg-amber-50 rounded-2xl p-4 shadow-sm border border-amber-100 flex gap-3">
             <StickyNote className="text-amber-600 shrink-0 mt-1" />
@@ -167,6 +186,18 @@ export default async function Dashboard() {
             </div>
           </section>
         )}
+
+        {/* COMPONENTE RECEBE A FUNÇÃO PODEROSA DO SERVIDOR */}
+        {pendingRequest && (
+          <section className="pt-2">
+            <ProductRequestActions 
+              produtoNome={nomesProdutosPendentes} 
+              solicitacaoId={pendingRequest.id} 
+              onAction={aprovarPedidoNoServidor} // <--- Passando a função aqui!
+            />
+          </section>
+        )}
+
       </div>
     </main>
   );

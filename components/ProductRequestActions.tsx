@@ -1,43 +1,31 @@
 // components/ProductRequestActions.tsx
 'use client';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 
 interface Props {
   solicitacaoId: string;
   produtoNome: string;
+  onAction: (id: string, status: string, provider: string) => Promise<void>; // Avisa que ele vai receber uma função
 }
 
-export default function ProductRequestActions({ solicitacaoId, produtoNome }: Props) {
+export default function ProductRequestActions({ solicitacaoId, produtoNome, onAction }: Props) {
   const [resolvedStatus, setResolvedStatus] = useState<string | null>(null);
-  const [resolvedProvider, setResolvedProvider] = useState<string | null>(null); // <-- Estado novo aqui!
+  const [resolvedProvider, setResolvedProvider] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleAction = async (novoStatus: 'approved' | 'rejected', providedBy?: 'empresa' | 'cliente') => {
+  const handleAction = async (novoStatus: 'approved' | 'rejected', providedBy: 'empresa' | 'cliente') => {
     setLoading(true);
     
-    const updateData: any = { 
-        status: novoStatus 
-    };
-
-    if (novoStatus === 'approved') {
-        updateData.approval_date = new Date().toISOString();
-        if (providedBy) {
-            updateData.provided_by = providedBy;
-        }
-    }
-
-    const { error } = await supabase
-      .from('product_requests')
-      .update(updateData)
-      .eq('id', solicitacaoId); 
-
-    if (error) {
-      console.error('Erro ao atualizar status:', error.message);
-      alert('Houve um erro ao registrar sua resposta.');
-    } else {
+    try {
+      // Aqui ele aciona a função poderosa que está lá no servidor!
+      await onAction(solicitacaoId, novoStatus, providedBy);
+      
+      // Se passou sem dar erro no servidor, mostramos a tela de sucesso
       setResolvedStatus(novoStatus);
-      if (providedBy) setResolvedProvider(providedBy); // <-- Salva quem vai providenciar
+      setResolvedProvider(providedBy);
+    } catch (error) {
+      console.error('Erro na ação:', error);
+      alert('Houve um erro de conexão. Tente novamente.');
     }
     
     setLoading(false);
@@ -47,7 +35,6 @@ export default function ProductRequestActions({ solicitacaoId, produtoNome }: Pr
     return (
       <div className="p-4 bg-slate-50 rounded-2xl text-center shadow-sm">
         <p className="text-slate-700 font-medium">
-          {/* Agora ele verifica quem vai fornecer para dar a mensagem certa! */}
           {resolvedStatus === 'approved' && resolvedProvider === 'empresa'
             ? '✅ Obrigado! Já avisamos o Piscineiro para levar.' 
             : '✅ Combinado, você vai providenciar.'}
