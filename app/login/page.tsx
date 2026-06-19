@@ -49,7 +49,7 @@ export default function LoginPage() {
           placeholder="Número do Celular" 
           value={telefone}
           onChange={(e) => setTelefone(e.target.value)}
-          className="w-full mb-4 p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          className="w-full mb-4 p-3 border border-slate-200 bg-white text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
           required
         />
         <input 
@@ -57,7 +57,7 @@ export default function LoginPage() {
           placeholder="Senha" 
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
-          className="w-full mb-6 p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          className="w-full mb-6 p-3 border border-slate-200 bg-white text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
           required
         />
         <button 
