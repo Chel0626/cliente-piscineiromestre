@@ -51,19 +51,41 @@ export default async function Dashboard() {
     );
   }
 
-  // --- FUNÇÃO TRADUTORA ---
-  // Transforma o texto do Supabase ('• Item 1 • Item 2') em uma lista real para o Next.js
+  // --- FUNÇÃO TRADUTORA À PROVA DE BALAS ---
   const formatarLista = (texto: any) => {
-    if (!texto || typeof texto !== 'string') return [];
-    return texto
-      .split('•') // Corta a frase onde tiver a bolinha
-      .map(item => item.trim()) // Remove os espaços em branco das pontas
-      .filter(item => item.length > 0); // Joga fora os pedaços vazios gerados pelo split
+    if (!texto) return [];
+    
+    // Se o Supabase já mandar como lista, retorna direto
+    if (Array.isArray(texto)) return texto;
+
+    if (typeof texto === 'string') {
+      // Caso 1: Formato do PostgreSQL '{"Item 1","Item 2"}'
+      if (texto.startsWith('{') && texto.endsWith('}')) {
+        return texto
+          .slice(1, -1) // Remove as chaves { }
+          .split(',') // Fátia nas vírgulas
+          .map(item => item.replace(/^"|"$/g, '').trim()) // Remove as aspas que o Postgres coloca
+          .filter(item => item.length > 0);
+      }
+      
+      // Caso 2: Formato do seu App da Empresa '• Item 1 • Item 2'
+      if (texto.includes('•')) {
+        return texto
+          .split('•')
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+      }
+
+      // Caso o texto não tenha bolinhas nem chaves, devolve como um item único
+      return [texto.trim()];
+    }
+    
+    return [];
   };
 
   const checklistTratado = formatarLista(visit.checklist);
   const produtosTratados = formatarLista(visit.products_used);
-  // ------------------------
+  // ----------------------------------------
 
   // 7. Renderiza a tela normal com os dados reais
   return (
@@ -72,7 +94,13 @@ export default async function Dashboard() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent z-10" />
         
         {visit.photo_url ? (
-          <Image src={visit.photo_url} alt="Piscina" fill className="object-cover" />
+          <Image 
+            src={visit.photo_url} 
+            alt="Piscina" 
+            fill 
+            className="object-cover" 
+            unoptimized // Adicionado para permitir fotos externas temporárias de teste
+          />
         ) : (
           <div className="w-full h-full bg-cyan-800 flex items-center justify-center">
             <Waves className="text-white w-16 h-16 opacity-50" />
