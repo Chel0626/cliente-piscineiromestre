@@ -1,6 +1,7 @@
 // components/WaterParamCard.tsx
 'use client';
 import { useState } from 'react';
+import { Info } from 'lucide-react';
 
 interface Props {
   label: string;
@@ -53,10 +54,10 @@ export default function WaterParamCard({ label, value, unit, status, icon }: Pro
 
   return (
     <div
-      className="relative flex-1 h-[96px] cursor-pointer select-none"
+      className="relative flex-1 h-[96px] cursor-pointer select-none group"
       onClick={() => setFlipped(!flipped)}
     >
-      {/* FRENTE DA CARTA (Com as fontes grandes e pesadas) */}
+      {/* FRENTE DA CARTA */}
       <div
         className={`absolute inset-0 ${colors.bg} border ${colors.border} rounded-xl p-3 flex flex-col justify-between transition-transform duration-500 ease-in-out`}
         style={{
@@ -69,12 +70,17 @@ export default function WaterParamCard({ label, value, unit, status, icon }: Pro
           <span className={`text-sm font-medium ${colors.label}`}>{label}</span>
           <span className={`w-[18px] h-[18px] shrink-0 ${colors.icon}`}>{icon}</span>
         </div>
+        
         <div className="flex items-baseline gap-1 mt-auto">
-          {/* Valor gigante (3xl) como no print */}
           <span className={`text-3xl font-bold tracking-tight ${colors.value}`}>{value || '-'}</span>
-          {/* Unidade um pouco maior e mais forte */}
           {unit && <span className={`text-xs font-semibold ${colors.unit}`}>{unit}</span>}
         </div>
+
+        {/* Ícone de informação mais nítido, encorpado e reposicionado */}
+        <Info 
+          strokeWidth={2.5} 
+          className={`absolute bottom-2.5 right-2.5 w-[16px] h-[16px] opacity-75 ${colors.icon}`} 
+        />
       </div>
 
       {/* VERSO DA CARTA */}
