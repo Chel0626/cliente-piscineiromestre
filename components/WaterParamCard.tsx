@@ -76,8 +76,11 @@ export default function WaterParamCard({ label, value, unit, status, icon }: Pro
           {unit && <span className={`text-xs font-semibold ${colors.unit}`}>{unit}</span>}
         </div>
 
-        {/* Ícone de informação posicionado no canto inferior direito */}
-        <Info className={`absolute bottom-3 right-3 w-3.5 h-3.5 opacity-40 ${colors.icon}`} />
+        {/* Ícone de informação mais nítido, encorpado e reposicionado */}
+        <Info 
+          strokeWidth={2.5} 
+          className={`absolute bottom-2.5 right-2.5 w-[16px] h-[16px] opacity-75 ${colors.icon}`} 
+        />
       </div>
 
       {/* VERSO DA CARTA */}
