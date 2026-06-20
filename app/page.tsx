@@ -1,5 +1,6 @@
 // app/page.tsx
 import { redirect } from 'next/navigation';
+import ShareVisitButton from '@/components/ShareVisitButton';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabaseServer';
 import WaterParamCard from '@/components/WaterParamCard';
@@ -128,7 +129,11 @@ export default async function Dashboard() {
       {/* CARD DA FOTO: Agora ele é o container pai do prompt de notificação */}
       <div className="relative w-full h-64 rounded-b-3xl overflow-hidden shadow-md">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent z-10" />
-        
+        {/* NOVO: BOTÃO DE COMPARTILHAR NO TOPO DIREITO */}
+        <div className="absolute top-4 right-4 z-20">
+          <ShareVisitButton visit={visit} clienteNome={cliente.name} />
+        </div>
+
         {visit.photo_url ? (
           <Image src={visit.photo_url} alt="Piscina" fill className="object-cover" unoptimized priority />
         ) : (
@@ -155,7 +160,7 @@ export default async function Dashboard() {
       </div>
 
       <div className="px-4 mt-6 space-y-6 max-w-lg mx-auto">
-        <section className="flex gap-3 overflow-x-auto pb-2">
+        <section className="flex w-full gap-2 pt-2 pb-6 items-center justify-between">
           <WaterParamCard label="pH" value={visit.ph} unit="" status="ideal" icon={<Droplet />} />
           <WaterParamCard label="Cloro" value={visit.chlorine} unit="ppm" status="ideal" icon={<FlaskConical />} />
           <WaterParamCard label="Alcalinidade" value={visit.alkalinity} unit="ppm" status="atencao" icon={<Gauge />} />

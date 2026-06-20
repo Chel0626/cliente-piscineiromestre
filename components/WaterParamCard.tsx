@@ -1,32 +1,95 @@
 // components/WaterParamCard.tsx
-import React from 'react';
+'use client';
+import { useState } from 'react';
 
-interface WaterParamCardProps {
+interface Props {
   label: string;
   value: string | number;
   unit: string;
-  status: 'ideal' | 'atencao' | 'critico';
+  status: string;
   icon: React.ReactNode;
 }
 
-export default function WaterParamCard({ label, value, unit, status, icon }: WaterParamCardProps) {
-  const statusConfig = {
-    ideal: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-    atencao: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-    critico: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+export default function WaterParamCard({ label, value, unit, status, icon }: Props) {
+  const [flipped, setFlipped] = useState(false);
+
+  const getStatusClasses = () => {
+    if (status === 'ideal') {
+      return {
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-200',
+        label: 'text-emerald-800',
+        value: 'text-emerald-900',
+        unit: 'text-emerald-700',
+        icon: 'text-emerald-700',
+      };
+    }
+    if (status === 'atencao') {
+      return {
+        bg: 'bg-amber-50',
+        border: 'border-amber-200',
+        label: 'text-amber-800',
+        value: 'text-amber-900',
+        unit: 'text-amber-700',
+        icon: 'text-amber-700',
+      };
+    }
+    return {
+      bg: 'bg-slate-50',
+      border: 'border-slate-200',
+      label: 'text-slate-600',
+      value: 'text-slate-800',
+      unit: 'text-slate-500',
+      icon: 'text-slate-500',
+    };
   };
 
-  const config = statusConfig[status];
+  const colors = getStatusClasses();
+
+  let idealText = '';
+  if (label.toLowerCase().includes('ph')) idealText = 'Ideal: 7.2 a 7.6';
+  else if (label.toLowerCase().includes('cloro')) idealText = 'Ideal: 1 a 3 ppm';
+  else if (label.toLowerCase().includes('alcalinidade')) idealText = 'Ideal: 80 a 120 ppm';
 
   return (
-    <div className={`flex flex-col p-4 rounded-2xl shadow-sm border ${config.bg} ${config.border} flex-1`}>
-      <div className="flex justify-between items-center mb-2">
-        <span className={`text-sm font-medium ${config.text}`}>{label}</span>
-        <div className={`w-6 h-6 ${config.text}`}>{icon}</div>
+    <div
+      className="relative flex-1 h-[96px] cursor-pointer select-none"
+      onClick={() => setFlipped(!flipped)}
+    >
+      {/* FRENTE DA CARTA (Com as fontes grandes e pesadas) */}
+      <div
+        className={`absolute inset-0 ${colors.bg} border ${colors.border} rounded-xl p-3 flex flex-col justify-between transition-transform duration-500 ease-in-out`}
+        style={{
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+        }}
+      >
+        <div className="flex justify-between items-start">
+          <span className={`text-sm font-medium ${colors.label}`}>{label}</span>
+          <span className={`w-[18px] h-[18px] shrink-0 ${colors.icon}`}>{icon}</span>
+        </div>
+        <div className="flex items-baseline gap-1 mt-auto">
+          {/* Valor gigante (3xl) como no print */}
+          <span className={`text-3xl font-bold tracking-tight ${colors.value}`}>{value || '-'}</span>
+          {/* Unidade um pouco maior e mais forte */}
+          {unit && <span className={`text-xs font-semibold ${colors.unit}`}>{unit}</span>}
+        </div>
       </div>
-      <div className="flex items-baseline gap-1">
-        <span className={`text-3xl font-bold ${config.text}`}>{value}</span>
-        <span className={`text-xs ${config.text} opacity-80`}>{unit}</span>
+
+      {/* VERSO DA CARTA */}
+      <div
+        className="absolute inset-0 bg-slate-800 rounded-xl p-2 border border-slate-700 flex flex-col justify-center items-center text-center transition-transform duration-500 ease-in-out shadow-sm"
+        style={{
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: flipped ? 'rotateY(0deg)' : 'rotateY(-180deg)',
+        }}
+      >
+        <span className="text-slate-300 text-[11px] uppercase tracking-wider font-semibold mb-1 truncate w-full">{label}</span>
+        <span className="text-emerald-400 text-xs font-bold bg-slate-900/50 px-2 py-1 rounded-md border border-slate-700/50 w-full">
+          {idealText}
+        </span>
       </div>
     </div>
   );

@@ -58,7 +58,7 @@ export default function ProductRequestActions({ solicitacaoId, produtoNome, onAc
       <button
         onClick={() => handleAction('approved', 'cliente')}
         disabled={loading}
-        className="w-full py-4 rounded-2xl font-bold text-white bg-[#00F0FF] shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all active:scale-95 disabled:opacity-50"
+        className="bg-blue-700 hover:bg-blue-800 text-white shadow-md shadow-blue-600/30 font-semibold py-3 px-4 rounded-xl transition-all"
       >
         Eu Providencio
       </button>
