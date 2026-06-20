@@ -5,7 +5,7 @@ import { useState } from 'react';
 interface Props {
   solicitacaoId: string;
   produtoNome: string;
-  onAction: (id: string, status: string, provider: string) => Promise<void>; // Avisa que ele vai receber uma função
+  onAction: (id: string, status: string, provider: string) => Promise<void>;
 }
 
 export default function ProductRequestActions({ solicitacaoId, produtoNome, onAction }: Props) {
@@ -16,14 +16,21 @@ export default function ProductRequestActions({ solicitacaoId, produtoNome, onAc
   const handleAction = async (novoStatus: 'approved' | 'rejected', providedBy: 'empresa' | 'cliente') => {
     setLoading(true);
     
+    // 1. OTIMISMO: Mostramos a mensagem de sucesso na mesma hora que ele clica!
+    setResolvedStatus(novoStatus);
+    setResolvedProvider(providedBy);
+
     try {
-      // Aqui ele aciona a função poderosa que está lá no servidor!
+      // 2. DELAY: Congelamos o código por 2.5 segundos. A mensagem fica paradinha na tela.
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
+      // 3. AÇÃO: Agora sim acionamos o servidor (que vai salvar no banco e atualizar a tela)
       await onAction(solicitacaoId, novoStatus, providedBy);
       
-      // Se passou sem dar erro no servidor, mostramos a tela de sucesso
-      setResolvedStatus(novoStatus);
-      setResolvedProvider(providedBy);
     } catch (error) {
+      // Se der erro de internet ou banco de dados, desfazemos o otimismo
+      setResolvedStatus(null);
+      setResolvedProvider(null);
       console.error('Erro na ação:', error);
       alert('Houve um erro de conexão. Tente novamente.');
     }
@@ -33,7 +40,7 @@ export default function ProductRequestActions({ solicitacaoId, produtoNome, onAc
 
   if (resolvedStatus) {
     return (
-      <div className="p-4 bg-slate-50 rounded-2xl text-center shadow-sm">
+      <div className="p-4 bg-slate-50 rounded-2xl text-center shadow-sm transition-all duration-500 animate-in fade-in">
         <p className="text-slate-700 font-medium">
           {resolvedStatus === 'approved' && resolvedProvider === 'empresa'
             ? '✅ Obrigado! Já avisamos o Piscineiro para levar.' 
