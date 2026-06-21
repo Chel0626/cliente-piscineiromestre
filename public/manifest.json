@@ -1,6 +1,6 @@
 {
-  "name": "Piscineiro Mestre",
-  "short_name": "Piscineiro",
+  "name": "Cliente Piscineiro",
+  "short_name": "Cliente Piscineiro",
   "description": "Painel do Cliente - Manutenção de Piscinas",
   "start_url": "/",
   "display": "standalone",
