@@ -12,10 +12,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// 1. Bloco de SEO e Informações (Sem o themeColor)
 export const metadata: Metadata = {
   title: "Piscineiro Mestre",
   description: "Painel do Cliente - Manutenção de Piscinas",
   manifest: "/manifest.json",
+};
+
+// 2. NOVO: Bloco de visualização da tela (Viewport)
+export const viewport: Viewport = {
   themeColor: "#0891b2",
 };
 
