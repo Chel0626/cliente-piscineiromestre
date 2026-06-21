@@ -90,9 +90,9 @@ export default async function Dashboard() {
   // 2. Busca o pedido estruturado pendente
   const { data: pendingRequest } = await supabase
     .from('product_requests')
-    .select('id, products')
+    .select('id, products, status')
     .eq('client_id', cliente.id) 
-    .eq('status', 'pending')
+    .in('status', ['pending', 'comprando'])
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -125,7 +125,7 @@ export default async function Dashboard() {
   const produtosTratados = formatarLista(visit.products_used);
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-10">
+    <main className="min-h-screen bg-slate-100 pb-10">
       {/* CARD DA FOTO: Agora ele é o container pai do prompt de notificação */}
       <div className="relative w-full h-64 rounded-b-3xl overflow-hidden shadow-md">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent z-10" />
@@ -211,6 +211,7 @@ export default async function Dashboard() {
             <ProductRequestActions 
               produtoNome={nomesProdutosPendentes} 
               solicitacaoId={pendingRequest.id} 
+              statusAtual={pendingRequest.status}
               onAction={aprovarPedidoNoServidor}
             />
           </section>
