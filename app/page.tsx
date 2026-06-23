@@ -2,12 +2,13 @@
 import { redirect } from 'next/navigation';
 import ShareVisitButton from '@/components/ShareVisitButton';
 import Image from 'next/image';
+import Link from 'next/link'; // <-- ADICIONADO PARA O BOTÃO
 import { createClient } from '@/lib/supabaseServer';
 import WaterParamCard from '@/components/WaterParamCard';
 import ProductRequestActions from '@/components/ProductRequestActions';
 import InstallPrompt from '@/components/InstallPrompt';
 import NotificationPrompt from '@/components/NotificationPrompt';
-import { Droplet, FlaskConical, Gauge, StickyNote, CheckCircle2, Waves } from 'lucide-react';
+import { Droplet, FlaskConical, Gauge, StickyNote, CheckCircle2, Waves, KeyRound } from 'lucide-react'; // <-- ADICIONADO KeyRound
 import { revalidatePath } from 'next/cache';
 
 export default async function Dashboard() {
@@ -129,6 +130,7 @@ export default async function Dashboard() {
       {/* CARD DA FOTO: Agora ele é o container pai do prompt de notificação */}
       <div className="relative w-full h-64 rounded-b-3xl overflow-hidden shadow-md">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent z-10" />
+        
         {/* NOVO: BOTÃO DE COMPARTILHAR NO TOPO DIREITO */}
         <div className="absolute top-4 right-4 z-20">
           <ShareVisitButton visit={visit} clienteNome={cliente.name} />
@@ -160,6 +162,22 @@ export default async function Dashboard() {
       </div>
 
       <div className="px-4 mt-6 space-y-6 max-w-lg mx-auto">
+        
+        {/* NOVO: CARD DE BOAS-VINDAS COM BOTÃO DE TROCAR SENHA */}
+        <section className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+          <div>
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-0.5">Cliente</p>
+            <h2 className="font-bold text-slate-800 truncate max-w-[200px]">{cliente.name}</h2>
+          </div>
+          <Link 
+            href="/trocar-senha"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-200 transition-all"
+          >
+            <KeyRound className="w-4 h-4 shrink-0" />
+            Senha
+          </Link>
+        </section>
+
         <section className="flex w-full gap-2 pt-2 pb-6 items-center justify-between">
           <WaterParamCard label="pH" value={visit.ph} unit="" status="ideal" icon={<Droplet />} />
           <WaterParamCard label="Cloro" value={visit.chlorine} unit="ppm" status="ideal" icon={<FlaskConical />} />
