@@ -1,7 +1,7 @@
 // components/InstallPrompt.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { X, Download, Share } from 'lucide-react';
+import { X, Download, Share, Loader2 } from 'lucide-react';
 
 export default function InstallPrompt() {
   const [isReady, setIsReady] = useState(false);
@@ -9,6 +9,7 @@ export default function InstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false); // <-- NOVO ESTADO DE CARREGAMENTO
 
   useEffect(() => {
     setIsReady(true);
@@ -37,9 +38,19 @@ export default function InstallPrompt() {
       setShowPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    // NOVO: Captura o exato momento em que a instalação termina no Android
+    const handleAppInstalled = () => {
+      setIsInstalling(false);
+      setShowPrompt(false);
+    };
 
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled); // <-- Adiciona o ouvinte
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
   const handleInstallClick = async () => {
@@ -50,6 +61,10 @@ export default function InstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
+      // O cliente aceitou! Em vez de fechar, ativamos a tela de carregamento
+      setIsInstalling(true);
+    } else {
+      // O cliente recusou a instalação, fechamos o popup
       setShowPrompt(false);
     }
     setDeferredPrompt(null);
@@ -72,31 +87,51 @@ export default function InstallPrompt() {
         
         <div className="flex-1 pt-1">
           <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
-            Instale o App
+            {isInstalling ? 'Instalando...' : 'Instale o App'}
           </h3>
+          
           {isIOS ? (
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
               Para instalar no iPhone, toque em <Share className="w-3 h-3 inline pb-0.5" /> <strong>Compartilhar</strong> na barra inferior e depois em <strong>Adicionar à Tela de Início</strong>.
             </p>
           ) : (
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Adicione nosso aplicativo à sua tela inicial para acesso rápido e notificações.
+              {isInstalling 
+                ? 'Aguarde um momento, o aplicativo está sendo adicionado à sua tela inicial.' 
+                : 'Adicione nosso aplicativo à sua tela inicial para acesso rápido e notificações.'}
             </p>
           )}
 
-          {!isIOS && deferredPrompt && (
-            <button 
-              onClick={handleInstallClick}
-              className="mt-3 bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors w-full"
-            >
-              Instalar Agora
-            </button>
+          {!isIOS && (
+            <>
+              {/* Mostra o botão original apenas se NÃO estiver instalando */}
+              {!isInstalling && deferredPrompt && (
+                <button 
+                  onClick={handleInstallClick}
+                  className="mt-3 bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors w-full"
+                >
+                  Instalar Agora
+                </button>
+              )}
+
+              {/* Mostra a rodinha de carregamento APENAS durante a instalação */}
+              {isInstalling && (
+                <div className="mt-3 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold py-2 px-4 rounded-lg border border-slate-100 dark:border-slate-700 w-full">
+                  <Loader2 className="w-4 h-4 animate-spin text-cyan-500" />
+                  Aguarde...
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        <button onClick={closePrompt} className="text-slate-400 hover:text-slate-600 p-1">
-          <X className="w-5 h-5" />
-        </button>
+        {/* Esconde o "X" de fechar durante a instalação para evitar que o usuário clique acidentalmente */}
+        {!isInstalling && (
+          <button onClick={closePrompt} className="text-slate-400 hover:text-slate-600 p-1">
+            <X className="w-5 h-5" />
+          </button>
+        )}
+        
       </div>
     </div>
   );
