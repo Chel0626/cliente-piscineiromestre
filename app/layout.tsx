@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"; // <-- 1. Import adicionado aqui
 import "./globals.css";
 
 const geistSans = Geist({
@@ -50,6 +51,8 @@ export default function RootLayout({
         </footer>
         {/* --- FIM DO RODAPÉ --- */}
 
+        {/* --- VERCEL ANALYTICS --- */}
+        <Analytics /> {/* <-- 2. Componente adicionado no final do body */}
       </body>
     </html>
   );
