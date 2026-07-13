@@ -1,4 +1,5 @@
 // app/page.tsx
+import AccessTracker from "@/components/AccessTracker"; 
 import { redirect } from 'next/navigation';
 import ShareVisitButton from '@/components/ShareVisitButton';
 import Image from 'next/image';
@@ -237,6 +238,8 @@ export default async function Dashboard() {
 
         <InstallPrompt />
       </div>
+      {/* O nosso rastreador silencioso */}
+      {cliente?.id && <AccessTracker clientId={cliente.id} />}
     </main>
   );
 }
