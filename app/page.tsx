@@ -93,7 +93,7 @@ export default async function Dashboard() {
     .from('product_requests')
     .select('id, products, status')
     .eq('client_id', cliente.id) 
-    .in('status', ['pending', 'comprando'])
+    .in('status', ['pending', 'comprando', 'approved'])
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
