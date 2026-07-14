@@ -5,27 +5,18 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function AccessTracker({ clientId }: { clientId: string }) {
   useEffect(() => {
-    if (!clientId) {
-      console.log("Rastreador: Sem Client ID fornecido.");
-      return;
-    }
+    if (!clientId) return;
 
     const updateLastAccess = async () => {
-      console.log(`Rastreador: Tentando atualizar cliente ID: ${clientId}`);
-      const agora = new Date().toISOString();
-
-      const { data, error } = await supabase
-        .from("clients")
-        .update({ last_access: agora })
-        .eq("id", clientId)
-        .select(); // Adicionando .select() para forçar o retorno da linha atualizada
+      // Chamamos a função segura que criamos no banco de dados
+      const { error } = await supabase.rpc("register_client_access", {
+        client_uuid: clientId,
+      });
 
       if (error) {
-        console.error("ERRO RASTREADOR (Supabase):", error.message);
-      } else if (data && data.length > 0) {
-        console.log(`Rastreador: Sucesso! Cliente atualizado:`, data[0].name);
+        console.error("Erro ao registrar acesso:", error.message);
       } else {
-        console.log("Rastreador: Nenhuma linha atualizada. Verifique se o ID existe.");
+        console.log("Rastreador: Acesso registrado com total segurança!");
       }
     };
 
