@@ -1,23 +1,31 @@
 "use client";
 
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient"; // Confirme se o caminho está certo
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AccessTracker({ clientId }: { clientId: string }) {
   useEffect(() => {
-    if (!clientId) return;
+    if (!clientId) {
+      console.log("Rastreador: Sem Client ID fornecido.");
+      return;
+    }
 
     const updateLastAccess = async () => {
-      // O Supabase devolve o erro dentro do objeto de resposta
-      const { error } = await supabase
+      console.log(`Rastreador: Tentando atualizar cliente ID: ${clientId}`);
+      const agora = new Date().toISOString();
+
+      const { data, error } = await supabase
         .from("clients")
-        .update({ last_access: new Date().toISOString() })
-        .eq("id", clientId);
+        .update({ last_access: agora })
+        .eq("id", clientId)
+        .select(); // Adicionando .select() para forçar o retorno da linha atualizada
 
       if (error) {
-        console.error("ERRO REAL DO SUPABASE (RLS):", error.message);
+        console.error("ERRO RASTREADOR (Supabase):", error.message);
+      } else if (data && data.length > 0) {
+        console.log(`Rastreador: Sucesso! Cliente atualizado:`, data[0].name);
       } else {
-        console.log("Rastreador: Último acesso atualizado com sucesso!");
+        console.log("Rastreador: Nenhuma linha atualizada. Verifique se o ID existe.");
       }
     };
 
