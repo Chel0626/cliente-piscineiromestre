@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next"; // <-- 1. Import adicionado aqui
+import { Analytics } from "@vercel/analytics/next";
+import { IosInstallPrompt } from "@/components/IosInstallPrompt"; // <-- 1. Import do aviso iOS
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,14 +14,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// 1. Bloco de SEO e Informações (Sem o themeColor)
+// Bloco de SEO e Informações (Agora com as tags oficiais da Apple)
 export const metadata: Metadata = {
   title: "Piscineiro Mestre",
   description: "Painel do Cliente - Manutenção de Piscinas",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true, // Isso esconde a barra de endereços e botões do Safari!
+    title: "MHM Piscinas", // O nome que vai aparecer abaixo do ícone no iPhone
+    statusBarStyle: "default",
+  },
 };
 
-// 2. NOVO: Bloco de visualização da tela (Viewport)
+// Bloco de visualização da tela (Viewport)
 export const viewport: Viewport = {
   themeColor: "#0891b2",
 };
@@ -51,8 +57,9 @@ export default function RootLayout({
         </footer>
         {/* --- FIM DO RODAPÉ --- */}
 
-        {/* --- VERCEL ANALYTICS --- */}
-        <Analytics /> {/* <-- 2. Componente adicionado no final do body */}
+        {/* --- COMPONENTES INVISÍVEIS / GLOBAIS --- */}
+        <IosInstallPrompt /> {/* <-- 2. O aviso só aparece se for iPhone/Safari */}
+        <Analytics />
       </body>
     </html>
   );
