@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Share, PlusSquare, X, ArrowDown, MoreHorizontal, Pointer } from 'lucide-react';
+import { Share, PlusSquare, X, ArrowDown, MoreHorizontal, Pointer, ChevronDown } from 'lucide-react';
 
 export function IosInstallPrompt() {
   const [isIos, setIsIos] = useState(false);
@@ -23,12 +23,12 @@ export function IosInstallPrompt() {
     setIsStandalone(isStandaloneMode);
   }, []);
 
-  // O "Motor do GIF": Alterna os passos automaticamente a cada 2.5 segundos
+  // O "Motor do GIF": Alterna os passos automaticamente a cada 2.5 segundos (agora de 1 a 4)
   useEffect(() => {
     if (!isIos || isStandalone || isDismissed) return;
     
     const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev >= 3 ? 1 : prev + 1));
+      setCurrentStep((prev) => (prev >= 4 ? 1 : prev + 1));
     }, 2500);
     
     return () => clearInterval(interval);
@@ -55,53 +55,68 @@ export function IosInstallPrompt() {
               Instale o App
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Siga os passos abaixo para fixar no celular:
+              Siga os passos abaixo para instalar no celular:
             </p>
           </div>
 
           {/* O "Televisor" do nosso GIF em código */}
           <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl p-4 h-[120px] relative flex items-center justify-center border border-slate-200 dark:border-slate-700">
             
-            {/* PASSO 1 */}
+            {/* PASSO 1: Três Pontinhos */}
             <div className={`absolute flex flex-col items-center transition-all duration-500 ${currentStep === 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">1</span>
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Toque em Opções / Compartilhar</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Toque nos três pontinhos</span>
               </div>
-              <div className="flex gap-4 items-center bg-white dark:bg-slate-700 px-4 py-2 rounded-lg shadow-sm">
-                <MoreHorizontal className="h-6 w-6 text-slate-400" />
+              <div className="flex items-center bg-white dark:bg-slate-700 px-6 py-2 rounded-lg shadow-sm">
                 <div className="relative">
-                  <Share className="h-6 w-6 text-blue-500" />
+                  <MoreHorizontal className="h-6 w-6 text-slate-700 dark:text-slate-300" />
                   <Pointer className="h-5 w-5 text-slate-800 absolute -bottom-3 -right-3 animate-ping" />
                 </div>
               </div>
             </div>
 
-            {/* PASSO 2 */}
+            {/* PASSO 2: Compartilhar */}
             <div className={`absolute flex flex-col items-center transition-all duration-500 ${currentStep === 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">2</span>
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Role ou toque em "Mais"</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Toque em Compartilhar</span>
               </div>
-              <div className="flex items-center bg-white dark:bg-slate-700 px-6 py-2 rounded-lg shadow-sm">
+              <div className="flex gap-2 items-center bg-white dark:bg-slate-700 px-6 py-2 rounded-lg shadow-sm">
+                <span className="text-sm font-medium text-slate-600">Compartilhar</span>
                 <div className="relative">
-                  <MoreHorizontal className="h-6 w-6 text-slate-600 dark:text-slate-300" />
-                  <Pointer className="h-5 w-5 text-slate-800 absolute -bottom-3 -right-3 animate-bounce" />
+                  <Share className="h-5 w-5 text-blue-500" />
+                  <Pointer className="h-4 w-4 text-slate-800 absolute -bottom-3 -right-3 animate-bounce" />
                 </div>
               </div>
             </div>
 
-            {/* PASSO 3 */}
+            {/* PASSO 3: Rolar ou clicar em Mais (^ invertido) */}
             <div className={`absolute flex flex-col items-center transition-all duration-500 ${currentStep === 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">3</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Role ou toque em Mais</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-700 px-6 py-2 rounded-lg shadow-sm">
+                <span className="text-sm font-medium text-slate-600">Mais</span>
+                <div className="relative">
+                  <ChevronDown className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+                  <Pointer className="h-4 w-4 text-slate-800 absolute -bottom-3 -right-3 animate-ping" />
+                </div>
+              </div>
+            </div>
+
+            {/* PASSO 4: Adicionar à Tela de Início */}
+            <div className={`absolute flex flex-col items-center transition-all duration-500 ${currentStep === 4 ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">4</span>
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Adicionar à Tela de Início</span>
               </div>
               <div className="flex items-center gap-2 bg-white dark:bg-slate-700 px-4 py-2 rounded-lg shadow-sm">
-                <span className="text-sm font-medium">Adicionar à Tela...</span>
+                <span className="text-sm font-medium text-slate-600">Adicionar à Tela...</span>
                 <div className="relative">
                   <PlusSquare className="h-5 w-5 text-slate-700 dark:text-slate-300" />
-                  <Pointer className="h-5 w-5 text-slate-800 absolute -bottom-2 -right-3 animate-pulse" />
+                  <Pointer className="h-4 w-4 text-slate-800 absolute -bottom-2 -right-3 animate-pulse" />
                 </div>
               </div>
             </div>
